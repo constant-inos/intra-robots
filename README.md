@@ -1,1 +1,283 @@
 # intra-robots
+
+%%%% TO INSTALL: %%%%
+Prices:
+https://www.trossenrobotics.com/robotic-arms/ros-research-arms.aspx
+Instructions from :
+https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_interface/software_setup.html
+(with some additional steps)
+
+## Install ROS1
+--sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+--sudo apt install curl # if you haven't already installed curl
+--curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+--sudo apt update
+-- sudo apt install ros-melodic-ddynamic-reconfigure
+
+##Install xsarm stuff
+-- sudo apt install curl
+-- curl 'https://raw.githubusercontent.com/Interbotix/interbotix_ros_manipulators/main/interbotix_ros_xsarms/install/amd64/xsarm_amd64_install.sh' > xsarm_amd64_install.sh
+-- chmod +x xsarm_amd64_install.sh
+-- ./xsarm_amd64_install.sh
+
+
+%%%% TO CONTROL THROUGH ROS TOPICS (use GAZEBO SIMULATION): %%%%
+Instructions from:
+https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_packages/gazebo_simulation_configuration.html
+
+1ST TERMINAL:
+-- roslaunch interbotix_xsarm_gazebo xsarm_gazebo.launch robot_model:=wx200 dof:=5 use_position_controllers:=true
+2ND TERMINAL:
+-- rosservice call /gazebo/unpause_physics
+(-- rostopic list)
+-- rostopic pub -1 /wx200/wrist_angle_controller/command std_msgs/Float64 "data: -1.0"
+-- rostopic pub -1 /wx200/right_finger_controller/command std_msgs/Float64 "data: -1.0"
+ETC...
+
+%%%% TO CONTROL THROUGH RVIZ SIMULATION (use GAZEBO SIMULATION as well): %%%%
+1ST TERMINAL:
+-- roslaunch interbotix_xsarm_moveit xsarm_moveit.launch robot_model:=wx250s dof:=6 use_gazebo:=true
+2ND TERMINAL:
+-- rosservice call /gazebo/unpause_physics
+
+then plan motor movement in RVIZ
+
+
+%%%% Additional links %%%%
+other robots: 
+https://www.robotshop.com/en/arduino-braccio-robotic-arm.html
+https://www.youtube.com/watch?v=xiMoGeVya8o
+https://github.com/zakizadeh/ros_braccio_moveit
+
+https://www.robotshop.com/en/lynxmotion-al5df-kt-robotic-arm-flowbotics-studio.html
+
+https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_interface/index.html
+https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_interface/software_setup.html
+https://www.trossenrobotics.com/docs/interbotix_xsarms/troubleshooting/index.html
+https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_interface/quickstart.html
+https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_packages/https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_packages/gazebo_simulation_configuration.html
+https://devanshdhrafani.github.io/blog/2020/11/01/diffdrive.html
+https://www.theconstructsim.com/q-a-192-add-pressure-sensors-in-gazebo-simulation-for-dogbot/
+https://www.theconstructsim.com/add-pressure-sensors-in-rviz/
+
+
+%%%% Movement commands:
+rostopic pub -1 /wx200/waist_controller/command std_msgs/Float64 "data: 3.0"
+rostopic pub -1 /wx200/waist_controller/command std_msgs/Float64 "data: 0.0"
+rostopic pub -1 /wx200/wrist_angle_controller/command std_msgs/Float64 "data: +1.0"
+rostopic pub -1 /wx200/waist_controller/command std_msgs/Float64 "data: 2.0"
+rostopic pub -1 /wx200/wrist_angle_controller/command std_msgs/Float64 "data: +2.0"
+rostopic pub -1 /wx200/waist_controller/command std_msgs/Float64 "data: -3.0"
+rostopic pub -1 /wx200/elbow_controller/command std_msgs/Float64 "data: +1.0"
+rostopic pub -1 /wx200/shoulder_controller/command std_msgs/Float64 "data: -3.0"
+
+and more ... check with: (rostopic list)
+
+%%%% To authomatically add objects in Gazebo world when loading:
+1)step 1:
+copy object from gazebo_models-master (folder in Desktop) to the gazebo models folder with the following command:
+sudo cp -r /home/alberto/Desktop/gazebo_models-master/"object" /usr/share/gazebo-9/models/
+Examples:  
+sudo cp -r /home/alberto/Desktop/gazebo_models-master/table_modified_alberto1 /usr/share/gazebo-9/models/
+sudo cp -r /home/alberto/Desktop/gazebo_models-master/wood_cube_10cm /usr/share/gazebo-9/models/
+sudo cp -r /home/alberto/Desktop/gazebo_models-master/bowl /usr/share/gazebo-9/models/
+sudo cp -r /home/alberto/Desktop/gazebo_models-master/wood_cube_2_5cm /usr/share/gazebo-9/models/
+sudo cp -r /home/alberto/Desktop/gazebo_models-master/table_modified_alberto1_STATIC /usr/share/gazebo-9/models/
+sudo cp -r /home/alberto/Desktop/gazebo_models-master/wood_cube_10cm_with_sensor /usr/share/gazebo-9/models/
+
+If necessary, to clean update remove previous copied files:
+sudo rm -r /usr/share/gazebo-9/models/wood_cube_10cm_with_sensor/
+
+2)Modify xsarm_gazebo.world from
+/home/alberto/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo/worlds
+by adding the objects like following:
+   <!-- A post box plane -->
+   <include>
+     <uri>model://bowl</uri>
+     <pose>2 1 0 0 0 0</pose>
+   </include> 
+
+3) roslaunch interbotix_xsarm_gazebo xsarm_gazebo.launch robot_model:=wx200 dof:=5 use_position_controllers:=true 
+etc...
+
+3)Relevant readings:
+https://www.theconstructsim.com/gazebo-5-minutes-002-add-gazebo-models-simulation/
+https://automaticaddison.com/urdf-vs-sdf-link-pose-joint-pose-visual-collision/
+
+%%%%%%%%%% TO ENABLE PLACEMENT OF ROBOT TO OTHER CARTESIAN COORDINATES AND ON TOP OF OBJECTS:
+roslaunch interbotix_xsarm_gazebo xsarm_gazebo.launch robot_model:=wx200 dof:=5 use_position_controllers:=true use_world_frame:=false
+
+(use_world_frame parameter)
+
+Also the surface down the robot could be static which means we need to change the related sdf files
+(e.g a table below the robot)
+Otherwise somehow the frame of the robot base "base_link" must be attached to the frame of another object
+https://www.trossenrobotics.com/docs/interbotix_xsarms/ros_packages/arm_control.html
+https://navigation.ros.org/setup_guides/transformation/setup_transforms.html
+https://automaticaddison.com/coordinate-frames-and-transforms-for-ros-based-mobile-robots/
+
+
+%%%%%%%%%% TO PLACE SENSOR (mounted on an object (not on a robot)):
+Need to create a new or modify an existing SDF fille on top of which you want to place the sensor.
+
+Use the migration examples from: 
+https://github.com/ros-simulation/gazebo_ros_pkgs/wiki/
+,to place various sensors on top of existing SDF's
+For the usecase of laser-ray sensors for_ example, look at:
+https://github.com/ros-simulation/gazebo_ros_pkgs/wiki/ROS-2-Migration:-Ray-sensors#gazebo_ros_range
+
+(Follow ROS1 Migration workflow)
+See example on Desktop:
+wood_cube_10cm_with_sensor where a preexisting SDF fille from gazebo_models-master folder in desktop was modified to have a sensor too.
+
+Modify and create new SDF folder in  gazebo_models-master (folder in Desktop) and
+copy object from gazebo_models-master (folder in Desktop) to the gazebo models folder with the following command:
+sudo cp -r /home/alberto/Desktop/gazebo_models-master/"object" /usr/share/gazebo-9/models/
+
+Modify xsarm_gazebo.world from
+/home/alberto/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo/worlds
+adding the new sensor
+
+To see available ROS topics use:
+rostopic list
+To see sensor values published as rostopics (ROS1) use 
+rostopic echo topic
+Example:
+rostopic echo /rrbot/laser/scan
+
+To check Gazebo's installed plugins:
+cd /usr/include/gazebo-9/gazebo/plugins
+
+
+Relative LINKS:
+
+https://github.com/ros-simulation/gazebo_ros_pkgs/wiki/ROS-2-Migration:-Ray-sensors#gazebo_ros_range
+https://github.com/ros-simulation/gazebo_ros_pkgs
+https://github.com/ros-simulation/gazebo_ros_pkgs/wiki/ROS-2-Migration:-Ray-sensors
+https://answers.ros.org/question/12083/messages-being-blocked-from-publishing/
+https://automaticaddison.com/how-to-add-ultrasonic-sensors-to-an-sdf-file-for-gazebo/
+https://classic.gazebosim.org/tutorials?cat=guided_i&tut=guided_i5
+https://articulatedrobotics.xyz/mobile-robot-8-lidar/
+http://wiki.ros.org/rviz/DisplayTypes/Range
+https://medium.com/teamarimac/integrating-sonar-and-ir-sensor-plugin-to-robot-model-in-gazebo-with-ros-656fd9452607
+https://medium.com/@bytesrobotics/a-review-of-the-ros2-urdf-gazebo-sensor-91e947c633d7
+https://answers.ros.org/question/291726/range-sensor-does-not-detect-objects-in-gazebo/
+https://www.theconstructsim.com/add-pressure-sensors-in-rviz/
+https://answers.gazebosim.org//question/6541/is-the-hector_gazebo_plugins-plugin-built-in-or-do-i-build-it-myself/
+https://github.com/issaiass/hector_gazebo_plugins
+
+
+Real World example sensor:
+https://www.robotshop.com/en/rplidar-a1m8-360-degree-laser-scanner-development-kit.html
+https://www.robotshop.com/media/files/content/r/rpk/pdf/ld108_slamtec_rplidar_datasheet_a1m8_v3.0_en.pdf
+(see page 5/19 of the above pdf)
+
+
+
+%%%%%%%%%% USE SENSOR(S) AS FEEDBACK TO CONTROL ROBOT'S MOVEMENT WITH PYTHON (sensor is mounted on an object (not on robot)):
+1ST TERMINAL:
+-- roslaunch interbotix_xsarm_gazebo xsarm_gazebo.launch robot_model:=wx200 dof:=5 use_position_controllers:=true
+2ND TERMINAL:
+-- rosservice call /gazebo/unpause_physics
+3RD TERMINAL:
+cd Desktop
+python read_sensor.py
+python control_robot.py
+python read_sensor_and_control.py
+
+In Gazebo: place and remove object near the sensor, so the robot will move.
+
+
+%%%%%%%%%% TO PLACE SENSOR on a robot:
+https://medium.com/teamarimac/integrating-sonar-and-ir-sensor-plugin-to-robot-model-in-gazebo-with-ros-656fd9452607
+https://classic.gazebosim.org/tutorials?tut=ros_gzplugins#RRBotExample
+
+Need to make a .xacro file that will contain the sensor INFORMATION and will be included in the existing robot's urdf.xacro.
+No need to modify existing robot's urdf's which are located at: 
+/home/user/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_descriptions/urdf folder.
+
+We create a model.xacro file at Desktop (robot_sensor).
+The joint names inside this file were changed to match the existing robot's urdf.xacro names.
+(in this case: /home/user/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_descriptions/urdf folder/wx200.urdf.xacro)
+We also included the relevant gazebo references inside the file model.xacro at Desktop. Instead, any gazebo reference could be placed inside:
+/home/alberto/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo/config/interbotix_texture.gazebo
+,but in order not to change these default configurations we put it all at model.xacro, which can be called by using the external_urdf_loc flag.
+
+
+To see sensor moving with robot and read sensor's values run:
+1ST TERMINAL:
+-- roslaunch interbotix_xsarm_gazebo xsarm_gazebo.launch robot_model:=wx200 dof:=5 use_position_controllers:=true external_urdf_loc:="/home/alberto/Desktop/robot_sensor/model6.xacro"
+2ND TERMINAL:
+-- rosservice call /gazebo/unpause_physics
+3RD TERMINAL:
+-- rostopic pub -1 /wx200/waist_controller/command std_msgs/Float64 "data: 3.0"
+4TH TERMINAL:
+-- rostopic echo wx200/sensor/sonar_front
+
+
+To also open RVIZ run:
+1ST TERMINAL:
+-- roslaunch interbotix_xsarm_moveit xsarm_moveit.launch robot_model:=wx200 dof:=5 use_gazebo:=true external_urdf_loc:="/home/alberto/Desktop/robot_sensor/model6.xacro"
+2ND TERMINAL:
+-- rosservice call /gazebo/unpause_physics
+3RD TERMINAL:
+-- rostopic pub -1 /wx200/waist_controller/command std_msgs/Float64 "data: 3.0" 
+   CANNOT DO WITH RVIZ! (OTHER COMMANDS AVAILABLE WHEN USING RVIZ)
+4TH TERMINAL:
+-- rostopic echo wx200/sensor/sonar_front
+
+
+
+
+%%%%%%%%%% End effector automatic pose positioning************************
+To also open RVIZ and to also be able to command desired end-effector poses run:
+1ST TERMINAL:
+-- roslaunch interbotix_xsarm_moveit_interface xsarm_moveit_interface.launch robot_model:=wx200 use_gazebo:=true use_python_interface:=true external_urdf_loc:="/home/alberto/Desktop/robot_sensor/model6.xacro"
+
+
+The python fille responsible for the end-effector poses is located at:
+/home/alberto/interbotix_ws/src/interbotix_ros_toolboxes/interbotix_common_toolbox/interbotix_moveit_interface/scripts/moveit_python_interface.py
+(the default initial unmodified filled has been renamed into: moveit_python_interface_initial.py
+The above script takes pose information by default from:
+/home/alberto/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/examples/interbotix_xsarm_moveit_interface/config/wx200.yaml
+In the modified moveit_python_interface.py fille we can override this functionality and define directrly the derired pose positions.
+
+
+%%%%%%%%%% End effector script controled pose positioning************************
+We heavily modified fille:  /home/alberto/interbotix_ws/src/interbotix_ros_toolboxes/interbotix_common_toolbox/interbotix_moveit_interface/scripts/moveit_python_interface.py
+, in order to add this functionallity. The initial is moveit_python_interface_initial.py located inside the same folder.
+1ST TERMINAL:
+-- roslaunch interbotix_xsarm_moveit_interface xsarm_moveit_interface.launch robot_model:=wx200 use_gazebo:=true use_python_interface:=true external_urdf_loc:="/home/alberto/Desktop/robot_sensor/model6.xacro"
+2ND TERMINAL:
+-- rosservice call /gazebo/unpause_physics
+3RD TERMINAL:
+cd Desktop
+python control_robot_socket_conection_to_mooveit.py
+
+change arr values inside script fille control_robot_socket_conection_to_mooveit.py to control where you want the robot to go next
+
+
+%%%%%%%%%% End effector script controled pose positioning with sensor************************
+We heavily modified fille: /home/alberto/interbotix_ws/src/interbotix_ros_toolboxes/interbotix_common_toolbox/interbotix_moveit_interface/scripts/moveit_python_interface.py
+, in order to add this functionallity. The initial is moveit_python_interface_initial.py located inside the same folder.
+1ST TERMINAL:
+-- roslaunch interbotix_xsarm_moveit_interface xsarm_moveit_interface.launch robot_model:=wx200 use_gazebo:=true use_python_interface:=true external_urdf_loc:="/home/alberto/Desktop/robot_sensor/model6.xacro"
+2ND TERMINAL:
+-- rosservice call /gazebo/unpause_physics
+3RD TERMINAL:
+cd Desktop
+python read_sensor_and_control_end_effector.py
+
+
+
+%%%%%%%%%% Cartesian sensing with sensor and cartesian robot positioning: ************************
+1ST TERMINAL:
+-- roslaunch interbotix_xsarm_moveit_interface xsarm_moveit_interface.launch robot_model:=wx200 use_gazebo:=true use_python_interface:=true external_urdf_loc:="/home/alberto/Desktop/robot_sensor/model6.xacro"
+2ND TERMINAL:
+-- rosservice call /gazebo/unpause_physics
+3RD TERMINAL:
+cd Desktop
+python read_sens_2_and_control_end_effector_3.py
+python cmplex_control_scenario.py
+python cmplex_control_scenario_2.py
+
