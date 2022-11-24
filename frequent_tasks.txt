@@ -29,3 +29,9 @@ terminal 2:
 terminal 3:
 -- python /home/karagk/Desktop/intrarobots/complex_control_scenario_5.py
 -------------------------------------------------------------------------
+
+models
+controllers
+extrernal_urdfs
+world
+moveit_python_interface

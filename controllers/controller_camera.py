@@ -192,7 +192,6 @@ def callback3(msg):
     if msg.range<0.3:
       move_to_specified_pose([0.00001,0.00001,0.45,0.0,0.0,0.0])
 
-once = 0
 from cv_bridge import CvBridge
 bridge = CvBridge()
 
@@ -218,25 +217,35 @@ def get_red_pixels(cv_image):
 def get_target(red_pixels):
 
     kernel = np.ones((10,10), np.uint8)
-    # red_pixels = cv2.erode(red_pixels,kernel=kernel)
+    red_pixels = cv2.erode(red_pixels,kernel=kernel)
 
     test=cv2.cvtColor(red_pixels, cv2.COLOR_BGR2GRAY)
     nz = np.nonzero(test)
-    print(nz)
-    cv2.imshow('cv_image', test)
-    cv2.waitKey()
 
-    obj_x = round(np.mean(nz[0]))
-    obj_y = round(np.mean(nz[1]))
+    px = (np.mean(nz[0]))
+    py = (np.mean(nz[1]))
 
-    return int(obj_x),int(obj_y)
+    x,y = pixel2coords(px,py)
+    print(px,py)
+    print(x,y)
+    return x,y
+
+def pixel2coords(px,py,H=640,W=480,C=0.025/14.0):
+    Xcv = px * C
+    Ycv = py * C
+
+    x = -Xcv + (H/2.0*C)
+    y = -Ycv + (0.54 + W/2.0*C)
+    print('x,y:',x,y)
+    return x,y
 
 def read_camera(msg):
     cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
     red_pixels = get_red_pixels(cv_image)
     x,y = get_target(red_pixels)
-    print(x,y)
+
+
     cv2.imshow('cv_image', cv_image)
     cv2.waitKey()
 
