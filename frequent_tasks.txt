@@ -1,0 +1,31 @@
+# check gazebo models
+ls /usr/share/gazebo-11/models/
+
+# add my model to gazebo models
+sudo cp -r path/to/my/"object model" /usr/share/gazebo-11/models/
+sudo cp -r /home/karagk/Desktop/temp/intra-robots/gazebo_models_using/table_short /usr/share/gazebo-11/models/
+
+# If necessary, to clean update remove previous copied files:
+sudo rm -r /usr/share/gazebo-11/models/model_folder/
+
+# Gazebo world file here:
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo/worlds
+
+# Python Controllers Folder:
+/home/karagk/Desktop/temp/intra-robots/controllers
+
+# MoveIt Python Interface:
+/home/karagk/interbotix_ws/src/interbotix_ros_toolboxes/interbotix_common_toolbox/interbotix_moveit_interface/scripts
+
+# External urdfs (to append objects (eg sensor) to the robot)
+external_urdf_loc:="/home/karagk/Desktop/temp/intra-robots/extrernal_urdfs/robot_sensor/model6.xacro"
+
+
+---------- KONSTANTINOS PC--------------------------------------------
+terminal 1:
+-- roslaunch interbotix_xsarm_moveit_interface xsarm_moveit_interface.launch robot_model:=wx200 use_gazebo:=true use_python_interface:=true external_urdf_loc:="/home/karagk/Desktop/temp/intra-robots/extrernal_urdfs/camera.xacro"
+terminal 2:
+-- rosservice call /gazebo/unpause_physics
+terminal 3:
+-- python /home/karagk/Desktop/intrarobots/complex_control_scenario_5.py
+-------------------------------------------------------------------------
