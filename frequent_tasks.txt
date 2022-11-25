@@ -23,7 +23,7 @@ external_urdf_loc:="/home/karagk/Desktop/temp/intra-robots/extrernal_urdfs/robot
 
 ---------- KONSTANTINOS PC--------------------------------------------
 terminal 1:
--- roslaunch interbotix_xsarm_moveit_interface xsarm_moveit_interface.launch robot_model:=wx200 use_gazebo:=true use_python_interface:=true external_urdf_loc:="/home/karagk/Desktop/temp/intra-robots/extrernal_urdfs/camera.xacro"
+-- roslaunch interbotix_xsarm_moveit_interface xsarm_moveit_interface.launch robot_model:=wx200 use_gazebo:=true use_python_interface:=true external_urdf_loc:="/home/karagk/intra-robots/extrernal_urdfs/camera.xacro"
 terminal 2:
 -- rosservice call /gazebo/unpause_physics
 terminal 3:
