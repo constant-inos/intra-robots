@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
-  <model name="wood_cube_2_5cm">
+  <model name="green_cube">
     <link name="link">
       <pose>0 0 0.0125 0 0 0</pose>
       <inertial>
@@ -52,9 +52,10 @@
           </box>
         </geometry>
         <material>
+          <!-- <script>Gazebo/Red</script> -->
           <script>
             <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Wood</name>
+            <name>Gazebo/Green</name>
           </script>
         </material>
       </visual>
