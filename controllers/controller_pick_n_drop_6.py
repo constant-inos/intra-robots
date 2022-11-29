@@ -121,8 +121,6 @@ def get_objects_position(cv_image):
         for c in list(center):
             objects.append((c.round(),'red'))
 
-
-
     if K_greens > 0:
         gray = cv2.cvtColor(only_greens, cv2.COLOR_BGR2GRAY)
         green_points = []
@@ -242,7 +240,7 @@ def main():
     #sub=rospy.Subscriber("/wx200/sensor/sonar_front4", LaserScan, callback) # cube big range sensor
     sub = rospy.Subscriber("/wx200/camera_link_optical/image_raw", Image, read_camera) # Camera sensor, Image is the data type sensor_msgs/Image
     # sub1 = rospy.Subscriber("/wx200/arm_controller/state", JointTrajectoryControllerState, is_busy)
-    # sub2 = rospy.Subscriber("/wx200/move_group/result", MoveGroupActionResult, execution_status)
+    sub2 = rospy.Subscriber("/wx200/move_group/result", MoveGroupActionResult, execution_status)
     rospy.spin()
 
 if __name__ == "__main__":
