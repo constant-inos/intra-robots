@@ -30,8 +30,13 @@
    </include>
    <include>
      <uri>model://plastic_cup</uri>
-     <pose>0.7 0.0 0.2 0 0 1.57079</pose>
+     <name>cup1</name>
+     <pose>-0.35 -0.35 0.05 0 0 1.57079</pose>
    </include>
-
+   <include>
+     <uri>model://plastic_cup</uri>
+     <name>cup2</name>
+     <pose>0.35 -0.35 0.05 0 0 1.57079</pose>
+   </include>
  </world>
 </sdf>

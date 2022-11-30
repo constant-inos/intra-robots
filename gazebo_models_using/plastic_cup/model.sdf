@@ -18,7 +18,7 @@
       <collision name="collision">
         <geometry>
           <mesh>
-            <scale>2 2 2</scale>
+            <scale>2 2 1</scale>
             <uri>model://plastic_cup/meshes/plastic_cup.dae</uri>
           </mesh>
         </geometry>
@@ -47,7 +47,7 @@
       <visual name="visual">
         <geometry>
           <mesh>
-            <scale>2 2 2</scale>
+            <scale>2 2 1</scale>
             <uri>model://plastic_cup/meshes/plastic_cup.dae</uri>
           </mesh>
         </geometry>

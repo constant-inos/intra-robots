@@ -10,21 +10,25 @@ import math
 import cv2
 from cv_bridge import CvBridge
 import random
-import scipy.cluster.hierarchy as hcluster
-from sklearn.cluster import MeanShift
 
 bridge = CvBridge()
 sub=0
 sub1 = 0
 port = 9988
+exev_status_code = 0
+exev_status_text = ''
 
-def move_to_specified_pose(value):
+def move_to_specified_pose(value,orientation='standard'):
+    x,y,z = value
+    theta = get_gripper_angle(x,y)
+    pose = [x,y,z,0.0,0.0,theta]
+
     global port
     arr=[]
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(("localhost", 9988))
     arr.append("move_to_specified_pose")
-    arr.append(value)
+    arr.append(pose)
     data_string = pickle.dumps(arr)
     s.send(data_string)
     s.close()
@@ -54,6 +58,7 @@ def move_gripper(value):
 def open_gripper():
     move_gripper([0.033, -0.033])
 def close_gripper():
+    # move_gripper([0.0, 0.0])
     move_gripper([0.016, -0.016])
 
 
@@ -105,7 +110,8 @@ def get_objects_position(cv_image):
 
     K_reds = count_objects(only_reds)
     K_greens = count_objects(only_greens)
-    print(K_reds,K_greens)
+    print("Red objects found:",K_reds)
+    print("Green objects found:",K_greens)
     if K_reds > 0:
         gray = cv2.cvtColor(only_reds, cv2.COLOR_BGR2GRAY)
         red_points = []
@@ -114,7 +120,6 @@ def get_objects_position(cv_image):
                 if gray[i,j]:
                     red_points.append(np.array([i,j]))
         red_points = np.float32(red_points)
-        print(len(red_points))
         criteria = (cv2.TERM_CRITERIA_EPS, 10, 1.0)
         ret, label, center = cv2.kmeans(red_points, K_reds, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 
@@ -129,7 +134,6 @@ def get_objects_position(cv_image):
                 if gray[i,j]:
                     green_points.append(np.array([i,j]))
         green_points = np.float32(green_points)
-        print(len(green_points))
         criteria = (cv2.TERM_CRITERIA_EPS, 10, 1.0)
         ret, label, center = cv2.kmeans(green_points, K_greens, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 
@@ -163,16 +167,22 @@ def pixel2coords(px,py,H=480,W=640):
 
 q = []
 busy = False
-standby_pose = [0.1,0.0,0.25,0.0,0.0,0.0]
+standby_pose = (0.1,0.0,0.25)
 
 def read_camera(msg):
     global standby_pose
     global busy
     if busy: return
 
-    move_to_specified_pose(standby_pose)
+    while(1):
+        move_to_specified_pose(standby_pose)
+        time.sleep(5)
+        move_to_specified_pose((-0.1,0.001,0.25))
+        time.sleep(5)
 
+    C=0.025/14.0
     cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+    #print("Capturing image...")
     objects = get_objects_position(cv_image)
 
     busy = True
@@ -183,40 +193,44 @@ def read_camera(msg):
     sub.unregister()
     main()
 
-
 def get_object(obj_pixels,color):
 
     x,y = pixel2coords(obj_pixels[0],obj_pixels[1])
 
     if x<0: phi = np.pi - np.arctan(-y/x)
     else: phi = np.arctan(y/x)
-
-    pose_message=[x+0.0+0.0000001,y+0.0000001,0.2,0.0,0.0,phi]
-
-    xr = random.random()-0.5
-    yr = random.random()*0.35+0.2
-    if x<0: phir = np.pi - np.arctan(-yr/xr)
-    else: phir = np.arctan(yr/xr)
-    random_pose=[xr+0.0+0.0000001,yr+0.0000001,0.2,0.0,0.0,phir]
+    pose = (x,y,0.25)
 
     if color == 'red':
-        bucket = [0.35,0.0,0.25,0.0,0.0,0.0]
+        bucket = (0.35,-0.35,0.25)
     else:
-        bucket = [0.25,0.0,0.25,0.0,0.0,0.0]
+        bucket = (-0.35,-0.35,0.25)
 
-
-    move_to_specified_pose(pose_message)
-    lower=pose_message[:]
-    lower[2]=0.14
+    move_to_specified_pose(pose)
+    lower = (pose[0],pose[1],0.14)
+    #print("Lower gripper")
     move_to_specified_pose(lower)
+    #print("Close gripper")
     close_gripper()
-    move_to_specified_pose(pose_message)
-    print(xr,yr)
-    # move_to_specified_pose(random_pose)
+    #print("Lift gripper")
+    move_to_specified_pose(pose)
+    #print("Move object to bucket: {},{},{}".format(bucket[0],bucket[1],bucket[2]))
     move_to_specified_pose(bucket)
+    #print("Open Gripper")
     open_gripper()
+    #print("Go back to StandBy Pose")
     move_to_specified_pose(standby_pose)
 
+def get_gripper_angle(x,y):
+
+    if (x<0 and y>0):
+        theta = np.pi - np.arctan(-y/x)
+    elif (x<0 and y<0):
+        theta = -np.pi + np.arctan(y/x)
+    else:
+        if x == 0: return np.arctan(np.inf)
+        theta = np.arctan(y/x)
+    return theta
 
 def is_busy(msg):
     global sub1
@@ -229,7 +243,6 @@ def is_busy(msg):
 def execution_status(msg):
     global exev_status_text, exec_status_code
     exev_status_text, exec_status_code = msg.status.text, msg.status.status
-    print(exev_status_text, exec_status_code)
     return exev_status_text, exec_status_code
 
 from moveit_msgs.msg import MoveGroupActionResult
