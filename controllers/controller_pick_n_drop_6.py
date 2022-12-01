@@ -14,53 +14,87 @@ import random
 bridge = CvBridge()
 sub=0
 sub1 = 0
-port = 9988
 exev_status_code = 0
 exev_status_text = ''
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(("localhost", 9989))
+
+def receive_socket_msg(string,address="localhost",port=9989):
+    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # s.connect((address, port))
+    global s
+    msg = []
+    try:
+        s.listen(1)
+        conn, addr = s.accept()
+        data = conn.recv(1024)
+        data_arr = pickle.loads(data)
+        msg = []
+        if data_arr[0] == string:
+            msg = data_arr
+        s.shutdown(1)
+        conn.close()
+    except socket.error as socketerror:
+        print("Error:",socketerror)
+
+    return msg
+
+
+def send_socket_msg(Message,address="localhost",port=9988):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((address, port))
+    data_string = pickle.dumps(Message)
+    s.send(data_string)
+    s.close()
 
 def move_to_specified_pose(value,orientation='standard'):
     x,y,z = value
     theta = get_gripper_angle(x,y)
     pose = [x,y,z,0.0,0.0,theta]
 
-    global port
-    arr=[]
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(("localhost", 9988))
-    arr.append("move_to_specified_pose")
-    arr.append(pose)
-    data_string = pickle.dumps(arr)
-    s.send(data_string)
-    s.close()
+    arr=["move_to_specified_pose",pose]
+    send_socket_msg(arr)
+
+    msg = []
+    while not msg:
+        msg = receive_socket_msg('go_to_defined_pose attempt')
+
+    print('EXECUTION:',msg[2])
+    if msg[2] == 'success':
+        return True
+    if msg[2] == 'fail':
+        return False
+
 
 def control_motor_angles(value):
-    global port
     arr=[]
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(("localhost", 9988))
     arr.append("control_motor_angles")
     arr.append(value)
-    data_string = pickle.dumps(arr)
-    s.send(data_string)
-    s.close()
+    send_socket_msg(arr)
 
 def move_gripper(value):
-    global port
     arr=[]
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(("localhost", 9988))
     arr.append("move_gripper")
     arr.append(value)
-    data_string = pickle.dumps(arr)
-    s.send(data_string)
-    s.close()
+    send_socket_msg(arr)
+
+    msg = []
+    while not msg:
+        msg = receive_socket_msg('move_gripper attempt')
+
+    if msg[1] == 'pick':
+        print('PICK:',msg[2])
+
+    if msg[2] == 'success':
+        return True
+    if msg[2] == 'fail':
+        return False
 
 def open_gripper():
     move_gripper([0.033, -0.033])
 def close_gripper():
-    # move_gripper([0.0, 0.0])
     move_gripper([0.016, -0.016])
-
 
 def ranges_to_polar(ranges,object_r=0.025,angle_inc=0.031733):
     ranges = list(ranges)
@@ -174,12 +208,6 @@ def read_camera(msg):
     global busy
     if busy: return
 
-    while(1):
-        move_to_specified_pose(standby_pose)
-        time.sleep(5)
-        move_to_specified_pose((-0.1,0.001,0.25))
-        time.sleep(5)
-
     C=0.025/14.0
     cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
     #print("Capturing image...")
@@ -205,8 +233,14 @@ def get_object(obj_pixels,color):
         bucket = (0.35,-0.35,0.25)
     else:
         bucket = (-0.35,-0.35,0.25)
-
-    move_to_specified_pose(pose)
+    move_to_specified_pose(standby_pose)
+    success = move_to_specified_pose(pose)
+    print(success)
+    if not success:
+        success = move_to_specified_pose((pose[0]+0.001,pose[1]+0.001,pose[2]))
+        if not success:
+            print("ignoring unreachable object")
+            return
     lower = (pose[0],pose[1],0.14)
     #print("Lower gripper")
     move_to_specified_pose(lower)
@@ -232,14 +266,6 @@ def get_gripper_angle(x,y):
         theta = np.arctan(y/x)
     return theta
 
-def is_busy(msg):
-    global sub1
-
-    d = math.dist(msg.actual.positions,msg.desired.positions)
-    # print(d)
-    # print(msg.desired.positions)
-    # print(msg.actual.positions)
-
 def execution_status(msg):
     global exev_status_text, exec_status_code
     exev_status_text, exec_status_code = msg.status.text, msg.status.status
@@ -252,7 +278,6 @@ def main():
     rospy.init_node('robot_state_publisher')#this is an existing topic
     #sub=rospy.Subscriber("/wx200/sensor/sonar_front4", LaserScan, callback) # cube big range sensor
     sub = rospy.Subscriber("/wx200/camera_link_optical/image_raw", Image, read_camera) # Camera sensor, Image is the data type sensor_msgs/Image
-    # sub1 = rospy.Subscriber("/wx200/arm_controller/state", JointTrajectoryControllerState, is_busy)
     sub2 = rospy.Subscriber("/wx200/move_group/result", MoveGroupActionResult, execution_status)
     rospy.spin()
 
