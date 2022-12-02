@@ -13,7 +13,7 @@ import random
 
 bridge = CvBridge()
 sub=0
-sub1 = 0
+sub2 = 0
 exev_status_code = 0
 exev_status_text = ''
 
@@ -39,7 +39,6 @@ def receive_socket_msg(string,address="localhost",port=9989):
         print("Error:",socketerror)
 
     return msg
-
 
 def send_socket_msg(Message,address="localhost",port=9988):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -83,18 +82,13 @@ def move_gripper(value):
     while not msg:
         msg = receive_socket_msg('move_gripper attempt')
 
-    if msg[1] == 'pick':
-        print('PICK:',msg[2])
+    return msg[1]
 
-    if msg[2] == 'success':
-        return True
-    if msg[2] == 'fail':
-        return False
 
 def open_gripper():
-    move_gripper([0.033, -0.033])
+    return move_gripper([0.033, -0.033])
 def close_gripper():
-    move_gripper([0.016, -0.016])
+    return move_gripper([0.016, -0.016])
 
 def ranges_to_polar(ranges,object_r=0.025,angle_inc=0.031733):
     ranges = list(ranges)
@@ -215,10 +209,11 @@ def read_camera(msg):
 
     busy = True
     for o in objects:
-        get_object(o[0],o[1])
+        success = get_object(o[0],o[1])
 
     busy = False
     sub.unregister()
+    sub2.unregister()
     main()
 
 def get_object(obj_pixels,color):
@@ -242,18 +237,24 @@ def get_object(obj_pixels,color):
             print("ignoring unreachable object")
             return
     lower = (pose[0],pose[1],0.14)
-    #print("Lower gripper")
+
     move_to_specified_pose(lower)
-    #print("Close gripper")
+
     close_gripper()
-    #print("Lift gripper")
+
     move_to_specified_pose(pose)
-    #print("Move object to bucket: {},{},{}".format(bucket[0],bucket[1],bucket[2]))
+
+    send_socket_msg(['check_gripper_state'],port=9988)
+
+    msg = receive_socket_msg('check_gripper_state',port=9989)
+    print(msg[1])
+
     move_to_specified_pose(bucket)
-    #print("Open Gripper")
+
     open_gripper()
-    #print("Go back to StandBy Pose")
+
     move_to_specified_pose(standby_pose)
+
 
 def get_gripper_angle(x,y):
 
@@ -269,14 +270,16 @@ def get_gripper_angle(x,y):
 def execution_status(msg):
     global exev_status_text, exec_status_code
     exev_status_text, exec_status_code = msg.status.text, msg.status.status
+    print('exec_status')
     return exev_status_text, exec_status_code
 
 from moveit_msgs.msg import MoveGroupActionResult
 from actionlib_msgs.msg import GoalStatus
+
 def main():
     global sub,sub1,sub2
-    rospy.init_node('robot_state_publisher')#this is an existing topic
-    #sub=rospy.Subscriber("/wx200/sensor/sonar_front4", LaserScan, callback) # cube big range sensor
+    rospy.init_node('robot_state_publisher') #this is an existing topic
+
     sub = rospy.Subscriber("/wx200/camera_link_optical/image_raw", Image, read_camera) # Camera sensor, Image is the data type sensor_msgs/Image
     sub2 = rospy.Subscriber("/wx200/move_group/result", MoveGroupActionResult, execution_status)
     rospy.spin()
