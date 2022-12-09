@@ -136,8 +136,9 @@ def get_objects_position(cv_image):
 
     objects = []
 
-    K_reds = count_objects(only_reds)
-    K_greens = count_objects(only_greens)
+    K_reds,cr = count_objects(only_reds)
+    K_greens,cg = count_objects(only_greens)
+
     print("Red objects found:",K_reds)
     print("Green objects found:",K_greens)
     if K_reds > 0:
@@ -161,6 +162,7 @@ def get_objects_position(cv_image):
             for j in range(gray.shape[1]):
                 if gray[i,j]:
                     green_points.append(np.array([i,j]))
+        green_points.append(np.array([i,j]))
         green_points = np.float32(green_points)
         criteria = (cv2.TERM_CRITERIA_EPS, 10, 1.0)
         ret, label, center = cv2.kmeans(green_points, K_greens, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
@@ -174,9 +176,11 @@ def count_objects(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (11, 11), 0)
     canny = cv2.Canny(blur, 30, 150, 3)
+    # cv2.imshow('canny',canny)
+    # cv2.waitKey()
     dilated = cv2.dilate(canny, (1, 1), iterations=0)
     (cnt, hierarchy) = cv2.findContours(dilated.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    return len(cnt)
+    return len(cnt),cnt
 
 def pixel2coords(px,py,H=480,W=640):
     C=0.025/14.0
