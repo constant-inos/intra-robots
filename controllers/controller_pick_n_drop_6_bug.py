@@ -130,8 +130,6 @@ def get_objects_position(cv_image):
     only_reds = cv2.bitwise_and(output_img, output_img, mask=red_mask)
     only_greens = cv2.bitwise_and(output_img, output_img, mask=green_mask)
 
-    filtered = only_reds + only_greens
-
     objects = []
 
     K_reds,cr = count_objects(only_reds)
@@ -166,32 +164,6 @@ def get_objects_position(cv_image):
 
         for c in list(center):
             objects.append((c.round(),'green'))
-
-    imc = cv_image.copy()
-    conts = np.zeros(cv_image.shape,np.uint8)
-    for i in range(len(cr)):
-        cv2.drawContours(imc, cr, i, (255, 0, 0), 2)
-        cv2.drawContours(conts, cr, i, (255, 255, 255), 1)
-    for i in range(len(cg)):
-        cv2.drawContours(imc, cg, i, (255, 0, 0), 2)
-        cv2.drawContours(conts, cg, i, (255, 255, 255), 1)
-
-    for o in objects:
-        center_coordinates = tuple(o[0])
-        center_coordinates = (center_coordinates[1],center_coordinates[0])
-        text_coordinates = (int(center_coordinates[0]-15),int(center_coordinates[1]-15))
-        if o[1]=='red': text_coordinates = (int(center_coordinates[0]+15),int(center_coordinates[1]+15))
-        radius = 1
-        color = (0,0,0)
-        thickness = 2
-        cv2.circle(imc, center_coordinates, radius, color, thickness)
-        cv2.putText(imc,str(center_coordinates)+', '+o[1],text_coordinates, cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA)
-
-    cv2.imshow('Object Contours',conts)
-    cv2.imshow('Recognised Objects',imc)
-    cv2.imshow('Original Image',cv_image)
-    cv2.imshow('Filtered Image',filtered)
-    cv2.waitKey()
 
     return objects
 

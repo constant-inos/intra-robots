@@ -54,7 +54,7 @@
         <material>
           <script>
             <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/GreyTransparent</name>
+            <name>Gazebo/BlackTransparent</name>
           </script>
         </material>
       </visual>

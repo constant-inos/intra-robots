@@ -18,22 +18,6 @@ exev_status_code = 0
 exev_status_text = ''
 
 
-def ranges_to_polar(ranges,object_r=0.025,angle_inc=0.031733):
-    ranges = list(ranges)
-    cut_ranges = []
-    index_cut_ranges = []
-    for i in range(3):
-        min_range = min(ranges)
-        ind = ranges.index(min_range)
-        cut_ranges.append(min_range)
-        index_cut_ranges.append(ind)
-        ranges[ind] = float('inf')
-
-    d = np.mean(cut_ranges[:3]) + object_r
-    theta = np.mean(index_cut_ranges)*angle_inc
-    return (d,theta)
-
-
 
 def get_objects_position(cv_image):
     # hsv format: hue, saturation, value (brightness)
@@ -87,7 +71,6 @@ def get_objects_position(cv_image):
             for j in range(gray.shape[1]):
                 if gray[i,j]:
                     green_points.append(np.array([i,j]))
-        green_points.append(np.array([i,j]))
         green_points = np.float32(green_points)
         criteria = (cv2.TERM_CRITERIA_EPS, 10, 1.0)
         ret, label, center = cv2.kmeans(green_points, K_greens, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
@@ -97,9 +80,9 @@ def get_objects_position(cv_image):
 
     imc = cv_image.copy()
     for i in range(len(cr)):
-        cv2.drawContours(imc, cr[i], 0, (255, 0, 0), 2)
+        cv2.drawContours(imc, cr, i, (255, 0, 0), 2)
     for i in range(len(cg)):
-        cv2.drawContours(imc, cg[i], 0, (255, 0, 0), 2)
+        cv2.drawContours(imc, cg, i, (255, 0, 0), 2)
 
     for o in objects:
         center_coordinates = tuple(o[0])
@@ -122,11 +105,8 @@ def get_objects_position(cv_image):
     return objects
 
 def count_objects(image):
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (11, 11), 0)
-    canny = cv2.Canny(blur, 30, 150, 3)
-    # cv2.imshow('canny',canny)
-    # cv2.waitKey()
+    blur = cv2.GaussianBlur(image, (11, 11), 0)
+    canny = cv2.Canny(blur, 50,150, 3)
     dilated = cv2.dilate(canny, (1, 1), iterations=0)
     (cnt, hierarchy) = cv2.findContours(dilated.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     return len(cnt),cnt
