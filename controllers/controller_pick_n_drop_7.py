@@ -21,8 +21,6 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(("localhost", 9989))
 
 def receive_socket_msg(string,address="localhost",port=9989):
-    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # s.connect((address, port))
     global s
     msg = []
     try:
@@ -130,10 +128,24 @@ def get_objects_position(cv_image):
     only_reds = cv2.bitwise_and(output_img, output_img, mask=red_mask)
     only_greens = cv2.bitwise_and(output_img, output_img, mask=green_mask)
 
+    filtered = only_reds + only_greens
+
     objects = []
+    objects1 = []
 
     K_reds,cr = count_objects(only_reds)
     K_greens,cg = count_objects(only_greens)
+
+    for c in cr:
+        a = c.reshape((c.shape[0],2))
+        x = a.mean(axis=0).round()
+        y = a.mean(axis=1).round()
+        objects1.append(((x,y),'red'))
+    for c in cg:
+        a = c.reshape((c.shape[0],2))
+        x = a.mean(axis=0).round()
+        y = a.mean(axis=1).round()
+        objects1.append(((x,y),'green'))
 
     print("Red objects found:",K_reds)
     print("Green objects found:",K_greens)
@@ -165,10 +177,38 @@ def get_objects_position(cv_image):
         for c in list(center):
             objects.append((c.round(),'green'))
 
+    # imc = cv_image.copy()
+    # conts = np.zeros(cv_image.shape,np.uint8)
+    # for i in range(len(cr)):
+    #     cv2.drawContours(imc, cr, i, (255, 0, 0), 2)
+    #     cv2.drawContours(conts, cr, i, (255, 255, 255), 1)
+    # for i in range(len(cg)):
+    #     cv2.drawContours(imc, cg, i, (255, 0, 0), 2)
+    #     cv2.drawContours(conts, cg, i, (255, 255, 255), 1)
+    #
+    # for o in objects:
+    #     center_coordinates = tuple(o[0])
+    #     center_coordinates = (center_coordinates[1],center_coordinates[0])
+    #     text_coordinates = (int(center_coordinates[0]-15),int(center_coordinates[1]-15))
+    #     if o[1]=='red': text_coordinates = (int(center_coordinates[0]+15),int(center_coordinates[1]+15))
+    #     radius = 1
+    #     color = (0,0,0)
+    #     thickness = 2
+    #     cv2.circle(imc, center_coordinates, radius, color, thickness)
+    #     cv2.putText(imc,str(center_coordinates)+', '+o[1],text_coordinates, cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA)
+
+    # cv2.imshow('Object Contours',conts)
+    # cv2.imshow('Recognised Objects',imc)
+    # cv2.imshow('Original Image',cv_image)
+    # cv2.imshow('Filtered Image',filtered)
+    # cv2.waitKey()
+
     return objects
 
 def count_objects(image):
-    blur = cv2.GaussianBlur(image, (11, 11), 0)
+    # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray = image
+    blur = cv2.GaussianBlur(gray, (11, 11), 0)
     canny = cv2.Canny(blur, 30, 150, 3)
     dilated = cv2.dilate(canny, (1, 1), iterations=0)
     (cnt, hierarchy) = cv2.findContours(dilated.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -234,7 +274,7 @@ def get_object(obj_pixels,color):
             print("ignoring unreachable object")
             return
     lower = (pose[0],pose[1],0.14)
-
+    open_gripper()
     move_to_specified_pose(lower)
 
     close_gripper()

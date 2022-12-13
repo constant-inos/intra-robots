@@ -10,6 +10,7 @@ sudo chmod -R +rwx $gazebo_models_folder/$f
 done
 
 homedir='/home/ntinos'
+homedir='/home/karagk'
 # homedir=~
 
 my_world_path='./worlds'
