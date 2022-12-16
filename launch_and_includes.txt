@@ -1,0 +1,92 @@
+
+LAUNCH: xsarm_moveit_interface.launch - PACKAGE: interbotix_xsarm_moveit_interface - PATH: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/examples/interbotix_xsarm_moveit_interface
+
+	INCLUDE:
+	LAUNCH: xsarm_moveit.launch - PACKAGE: interbotix_xsarm_moveit - PATH: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit
+		INCLUDE:
+		LAUNCH: xsarm_gazebo.launch - PACKAGE: interbotix_xsarm_gazebo - PATH: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo
+		
+		IF USE ACTUAL: ...
+		IF USE FAKE: ...
+		
+		INCLUDE:
+		LAUNCH: move_group.launch - PACKAGE: interbotix_xsarm_moveit - PATH: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit
+			MANY ARGS: ...
+			
+			INCLUDE:
+			LAUNCH: planning_context.launch - PACKAGE: interbotix_xsarm_moveit - PATH: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit
+				ARGS: ...
+				LOAD ROBOT_MODEL_URDF
+				LOAD ROBOT_MODEL_SRDF
+				LOAD JOINT_LIMITS_YAML
+				LOAD KINEMATICS_YAML (kinematics plugin ?)
+				
+			INCLUDE:
+			LAUNCH: planning_pipeline.launch.xml - PACKAGE: interbotix_xsarm_moveit
+				INCLUDE:
+				LAUNCH: ompl_planning_pipeline.launch.xml 
+					ARGS: planning_plugin, planning_adapters
+					LOAD: ompl_planning.yaml
+				
+			INCLUDE:
+			LAUNCH: trajectory_execution.launch.xml - PACKAGE: interbotix_xsarm_moveit
+				SOME PARAMS:...
+				
+				INCLUDE:
+				LAUNCH: xsarm_moveit_controller_manager.launch.xml - PACKAGE: interbotix_xsarm_moveit
+					SOME DOF CONTROLLERS
+				
+				INCLUDE:
+				LAUNCH: xsarm_moveit_sensor_manager.launch.xml - PACKAGE: interbotix_xsarm_moveit
+					EMPTY?
+				
+			NODE: move_group	
+				SOME PARAMS:...
+				
+		IF use_moveit_rviz:
+		LAUNCH: moveit_rviz.launch - PACKAGE: interbotix_xsarm_moveit - PATH: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit
+			LOAD ROSPARAM kinematics.yaml
+		
+	NODE: moveit_python_interface
+	LOAD: wx200.yaml
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/examples/interbotix_xsarm_moveit_interface/launch/xsarm_moveit_interface.launch
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/xsarm_moveit.launch
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo/launch/xsarm_gazebo.launch
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo/config/position_controllers/wx200_position_controllers.yaml
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo/config/trajectory_controllers/wx200_trajectory_controllers.yaml
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/move_group.launch
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/planning_context.launch
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_descriptions/urdf/wx200.urdf.xacro
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/config/srdf/wx200.srdf.xacro
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/config/joint_limits/5dof_joint_limits.yaml
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/planning_pipeline.launch.xml
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/ompl_planning_pipeline.launch.xml
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/config/ompl_planning.yaml
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/trajectory_execution.launch.xml
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/xsarm_moveit_controller_manager.launch.xml
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/config/controllers/5dof_controllers.yaml
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/xsarm_moveit_sensor_manager.launch.xml
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/moveit_rviz.launch
+
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/config/kinematics.yaml
+
