@@ -1,0 +1,28 @@
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 50
+controller_list:
+  - name: "arm_controller"
+    action_ns: follow_joint_trajectory
+    type: FollowJointTrajectory
+    default: true
+    joints:
+      - kuka_arm_0_joint
+      - kuka_arm_1_joint
+      - kuka_arm_2_joint
+      - kuka_arm_3_joint
+      - kuka_arm_4_joint
+      - kuka_arm_5_joint
+      - kuka_arm_6_joint
+hardware_interface:
+  joints:
+    - kuka_arm_0_joint
+    - kuka_arm_1_joint
+    - kuka_arm_2_joint
+    - kuka_arm_3_joint
+    - kuka_arm_4_joint
+    - kuka_arm_5_joint
+    - kuka_arm_6_joint
+  sim_control_mode: 0  # 0: position, 1: velocity
+# Publish all joint states
+# Creates the /joint_states topic necessary in ROS
