@@ -13,6 +13,24 @@
   <xacro:property name="urdf_loc" value="$(arg external_urdf_loc)"/>
   <xacro:property name="pi_offset" value="0.00001"/>
 
+  <xacro:property name="M_PI" value="3.1415926535897931"/>
+
+  <!-- Little helper macro to define the inertia matrix needed for links. -->
+  <xacro:macro name="cuboid_inertia_def" params="width height length mass">
+    <inertia ixx="${mass * (height * height + length * length) / 12}"
+             iyy="${mass * (width * width + length * length) / 12}"
+             izz="${mass * (width * width + height * height) / 12}"
+             ixy="0" iyz="0" ixz="0"/>
+  </xacro:macro>
+
+  <!-- length is along the y-axis! -->
+  <xacro:macro name="cylinder_inertia_def" params="radius length mass">
+    <inertia ixx="${mass * (3 * radius * radius + length * length) / 12}"
+             iyy="${mass * radius* radius / 2}"
+             izz="${mass * (3 * radius * radius + length * length) / 12}"
+             ixy="0" iyz="0" ixz="0"/>
+  </xacro:macro>
+
   <xacro:if value="$(arg load_gazebo_configs)">
     <xacro:include filename="$(find interbotix_xsarm_gazebo)/config/interbotix_texture.gazebo"/>
   </xacro:if>
@@ -50,17 +68,25 @@
       <inertia ixx="0.00381666666667" ixy="0" ixz="0" iyy="0.0036" iyz="0" izz="0.00381666666667"/>
     </inertial>
   </link>
+  <gazebo reference="calib_kuka_arm_base_link">
+    <kp>1000.0</kp>
+    <kd>1.0</kd>
+    <mu1>0.8</mu1>
+    <mu2>0.8</mu2>
+    <maxVel>0.0</maxVel>
+    <minDepth>0.001</minDepth>
+  </gazebo>
   <joint name="kuka_arm_0_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0.11"/>
     <axis xyz="0 0 1"/>
-    <limit effort="204" lower="-2.96705972839" upper="2.96705972839" velocity="1.91986217719"/>
-    <dynamics damping="0.1"/>
+    <limit effort="176" lower="-2.96705972839" upper="2.96705972839" velocity="1.91986217719"/>
+    <dynamics friction="10.0" damping="1.0"/>
     <parent link="calib_kuka_arm_base_link"/>
     <child link="kuka_arm_1_link"/>
   </joint>
   <link name="kuka_arm_1_link">
     <inertial>
-      <mass value="2.0"/>
+      <mass value="2.35"/>
       <origin rpy="0 0 0" xyz="0 0.04 0.130"/>
       <inertia ixx="0.0136666666667" ixy="0" ixz="0" iyy="0.0118666666667" iyz="0" izz="0.003"/>
     </inertial>
@@ -79,25 +105,26 @@
     </collision>
   </link>
   <transmission name="kuka_arm_0_trans">
-    <type>transmission_interface/SimpleTransmission</type>
+    <type>pr2_mechanism_model/SimpleTransmission</type>
     <joint name="kuka_arm_0_joint">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </joint>
     <actuator name="kuka_arm_0_motor">
-      <mechanicalReduction>1</mechanicalReduction>
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>50</mechanicalReduction>
     </actuator>
   </transmission>
   <joint name="kuka_arm_1_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0.20"/>
     <axis xyz="0 -1 0"/>
-    <limit effort="306" lower="-1.57079632679" upper="1.57079632679" velocity="1.91986217719"/>
-    <dynamics damping="0.1"/>
+    <limit effort="176" lower="-1.57079632679" upper="1.57079632679" velocity="1.91986217719"/>
+    <dynamics friction="10.0" damping="1.0"/>
     <parent link="kuka_arm_1_link"/>
     <child link="kuka_arm_2_link"/>
   </joint>
   <link name="kuka_arm_2_link">
     <inertial>
-      <mass value="2.0"/>
+      <mass value="2.35"/>
       <origin rpy="0 0 0" xyz="0 -0.04 0.07"/>
       <inertia ixx="0.0136666666667" ixy="0" ixz="0" iyy="0.0118666666667" iyz="0" izz="0.003"/>
     </inertial>
@@ -116,25 +143,26 @@
     </collision>
   </link>
   <transmission name="kuka_arm_1_trans">
-    <type>transmission_interface/SimpleTransmission</type>
+    <type>pr2_mechanism_model/SimpleTransmission</type>
     <joint name="kuka_arm_1_joint">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </joint>
     <actuator name="kuka_arm_1_motor">
-      <mechanicalReduction>1</mechanicalReduction>
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>50</mechanicalReduction>
     </actuator>
   </transmission>
   <joint name="kuka_arm_2_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0.20"/>
     <axis xyz="0 0 1"/>
-    <limit effort="204" lower="-2.96705972839" upper="2.96705972839" velocity="2.26892802759"/>
-    <dynamics damping="0.1"/>
+    <limit effort="100" lower="-2.96705972839" upper="2.96705972839" velocity="2.26892802759"/>
+    <dynamics friction="10.0" damping="1.0"/>
     <parent link="kuka_arm_2_link"/>
     <child link="kuka_arm_3_link"/>
   </joint>
   <link name="kuka_arm_3_link">
     <inertial>
-      <mass value="2.0"/>
+      <mass value="2.35"/>
       <origin rpy="0 0 0" xyz="0 -0.04 0.130"/>
       <inertia ixx="0.0136666666667" ixy="0" ixz="0" iyy="0.0118666666667" iyz="0" izz="0.003"/>
     </inertial>
@@ -153,25 +181,26 @@
     </collision>
   </link>
   <transmission name="kuka_arm_2_trans">
-    <type>transmission_interface/SimpleTransmission</type>
+    <type>pr2_mechanism_model/SimpleTransmission</type>
     <joint name="kuka_arm_2_joint">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </joint>
     <actuator name="kuka_arm_2_motor">
-      <mechanicalReduction>1</mechanicalReduction>
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>50</mechanicalReduction>
     </actuator>
   </transmission>
   <joint name="kuka_arm_3_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0.20"/>
     <axis xyz="0 1 0"/>
-    <limit effort="306" lower="-2.09439510239" upper="2.09439510239" velocity="2.26892802759"/>
-    <dynamics damping="0.1"/>
+    <limit effort="100" lower="-2.09439510239" upper="2.09439510239" velocity="2.26892802759"/>
+    <dynamics friction="10.0" damping="1.0"/>
     <parent link="kuka_arm_3_link"/>
     <child link="kuka_arm_4_link"/>
   </joint>
   <link name="kuka_arm_4_link">
     <inertial>
-      <mass value="2.0"/>
+      <mass value="2.35"/>
       <origin rpy="0 0 0" xyz="0 0.04 0.07"/>
       <inertia ixx="0.0136666666667" ixy="0" ixz="0" iyy="0.0118666666667" iyz="0" izz="0.003"/>
     </inertial>
@@ -190,25 +219,26 @@
     </collision>
   </link>
   <transmission name="kuka_arm_3_trans">
-    <type>transmission_interface/SimpleTransmission</type>
+    <type>pr2_mechanism_model/SimpleTransmission</type>
     <joint name="kuka_arm_3_joint">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </joint>
     <actuator name="kuka_arm_3_motor">
-      <mechanicalReduction>1</mechanicalReduction>
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>50</mechanicalReduction>
     </actuator>
   </transmission>
   <joint name="kuka_arm_4_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0.20"/>
     <axis xyz="0 0 1"/>
-    <limit effort="204" lower="-2.96705972839" upper="2.96705972839" velocity="2.26892802759"/>
-    <dynamics damping="0.1"/>
+    <limit effort="100" lower="-2.96705972839" upper="2.96705972839" velocity="2.26892802759"/>
+    <dynamics friction="10.0" damping="1.0"/>
     <parent link="kuka_arm_4_link"/>
     <child link="kuka_arm_5_link"/>
   </joint>
   <link name="kuka_arm_5_link">
     <inertial>
-      <mass value="2.0"/>
+      <mass value="2.35"/>
       <origin rpy="0 0 0" xyz="0 0.02 0.124"/>
       <inertia ixx="0.0126506666667" ixy="0" ixz="0" iyy="0.0108506666667" iyz="0" izz="0.003"/>
     </inertial>
@@ -227,25 +257,26 @@
     </collision>
   </link>
   <transmission name="kuka_arm_4_trans">
-    <type>transmission_interface/SimpleTransmission</type>
+    <type>pr2_mechanism_model/SimpleTransmission</type>
     <joint name="kuka_arm_4_joint">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </joint>
     <actuator name="kuka_arm_4_motor">
-      <mechanicalReduction>1</mechanicalReduction>
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>50</mechanicalReduction>
     </actuator>
   </transmission>
   <joint name="kuka_arm_5_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0.19"/>
     <axis xyz="0 -1 0"/>
-    <limit effort="306" lower="-2.09439510239" upper="2.09439510239" velocity="3.14159265359"/>
-    <dynamics damping="0.1"/>
+    <limit effort="38" lower="-2.09439510239" upper="2.09439510239" velocity="3.14159265359"/>
+    <dynamics friction="10.0" damping="1.0"/>
     <parent link="kuka_arm_5_link"/>
     <child link="kuka_arm_6_link"/>
   </joint>
   <link name="kuka_arm_6_link">
     <inertial>
-      <mass value="2.0"/>
+      <mass value="1.1"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <inertia ixx="0.00520833333333" ixy="0" ixz="0" iyy="0.00520833333333" iyz="0" izz="0.00520833333333"/>
     </inertial>
@@ -264,25 +295,26 @@
     </collision>
   </link>
   <transmission name="kuka_arm_5_trans">
-    <type>transmission_interface/SimpleTransmission</type>
+    <type>pr2_mechanism_model/SimpleTransmission</type>
     <joint name="kuka_arm_5_joint">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </joint>
     <actuator name="kuka_arm_5_motor">
-      <mechanicalReduction>1</mechanicalReduction>
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>50</mechanicalReduction>
     </actuator>
   </transmission>
   <joint name="kuka_arm_6_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0.078"/>
     <axis xyz="0 0 1"/>
-    <limit effort="204" lower="-2.96705972839" upper="2.96705972839" velocity="3.14159265359"/>
-    <dynamics damping="0.1"/>
+    <limit effort="38" lower="-2.96705972839" upper="2.96705972839" velocity="3.14159265359"/>
+    <dynamics friction="10.0" damping="1.0"/>
     <parent link="kuka_arm_6_link"/>
     <child link="kuka_arm_7_link"/>
   </joint>
   <link name="kuka_arm_7_link">
     <inertial>
-      <mass value="2.0"/>
+      <mass value="0.25"/>
       <origin xyz="0 0 0"/>
       <inertia ixx="0.000833333333333" ixy="0" ixz="0" iyy="0.000833333333333" iyz="0" izz="0.000833333333333"/>
     </inertial>
@@ -301,12 +333,13 @@
     </collision>
   </link>
   <transmission name="kuka_arm_6_trans">
-    <type>transmission_interface/SimpleTransmission</type>
+    <type>pr2_mechanism_model/SimpleTransmission</type>
     <joint name="kuka_arm_6_joint">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </joint>
     <actuator name="kuka_arm_6_motor">
-      <mechanicalReduction>1</mechanicalReduction>
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>50</mechanicalReduction>
     </actuator>
   </transmission>
 
