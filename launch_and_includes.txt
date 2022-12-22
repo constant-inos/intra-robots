@@ -1,4 +1,3 @@
-
 LAUNCH: xsarm_moveit_interface.launch - PACKAGE: interbotix_xsarm_moveit_interface - PATH: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/examples/interbotix_xsarm_moveit_interface
 
 	INCLUDE:

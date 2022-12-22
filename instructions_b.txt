@@ -1,0 +1,162 @@
+ -- install ros noetic
+(...)
+
+sudo apt update
+
+sudo apt-get install python3-rosdep
+sudo rosdep init
+rosdep update
+
+sudo apt-get install git
+
+ -- install xsarm 
+sudo apt install curl
+curl 'https://raw.githubusercontent.com/Interbotix/interbotix_ros_manipulators/main/interbotix_ros_xsarms/install/amd64/xsarm_amd64_install.sh' > xsarm_amd64_install.sh
+chmod +x xsarm_amd64_install.sh
+./xsarm_amd64_install.sh -d (noetic / melodic)
+
+
+
+-----------------------------------------------------------------------
+
+Robot urdf (in interbotic ws)
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_descriptions/urdf
+
+Package: interbotix_xsarm_moveit_interface (location: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/examples/interbotix_xsarm_moveit_interface)
+.launch file location
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/examples/interbotix_xsarm_moveit_interface/launch/xsarm_moveit_interface.launch
+
+Above launch file uses files:
+- mode_configs (from own package)
+- gets world_name from gazebo package (location: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo)
+
+Above launch file includes:
+- xsarm_moveit.launch from package interbotix_xsarm_moveit (location: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit)
+
+if use python interface: node -> python file
+
+
+xsarm_moveit.launch:
+
+- include gazebo launch file from gazebo package (and pass robot params eg link names)
+- include move_group.launch file (from same package)
+- if using rviz: include moveit_rviz.launch from package interbotix_xsarm_moveit
+
+move_group.launch:
+- include planning_context.launch from package interbotix_xsarm_moveit
+	- loads robots urdf (universal robot description format)
+	- loads some yaml files (??? kinematics_solver: lma_kinematics_plugin/LMAKinematicsPlugin )
+	- loads robots srdf (The semantic description that corresponds to the URDF)
+- include planning_pipeline.launch.xml from package interbotix_xsarm_moveit
+	- load planning plugin: ompl_interface/OMPLPlanner
+	- planning_adapters
+	- load file ompl_planning.yaml
+- include trajectory_execution.launch.xml
+	- include xsarm_moveit_controller_manager.launch.xml
+----------------------------------------------------------------------------------------------------------
+$(arg robot_name)/$(arg base_link_frame)
+$(arg robot_name)/shoulder_link
+$(arg robot_name)/upper_arm_link
+$(arg robot_name)/forearm_link
+$(arg robot_name)/wrist_link
+$(arg robot_name)/gripper_link
+$(arg robot_name)/ee_arm_link
+$(arg robot_name)/gripper_prop_link
+$(arg robot_name)/gripper_bar_link
+$(arg robot_name)/fingers_link
+$(arg robot_name)/left_finger_link
+$(arg robot_name)/right_finger_link
+$(arg robot_name)/ee_gripper_link
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/examples/interbotix_xsarm_moveit_interface/launch/xsarm_moveit_interface.launch
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/xsarm_moveit.launch
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo/launch/xsarm_gazebo.launch
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo/config/position_controllers/wx200_position_controllers.yaml
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo/config/trajectory_controllers/wx200_trajectory_controllers.yaml
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/move_group.launch
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/planning_context.launch
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_descriptions/urdf/wx200.urdf.xacro
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/config/srdf/wx200.srdf.xacro
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/config/joint_limits/5dof_joint_limits.yaml
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/planning_pipeline.launch.xml
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/ompl_planning_pipeline.launch.xml
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/config/ompl_planning.yaml
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/trajectory_execution.launch.xml
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/xsarm_moveit_controller_manager.launch.xml
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/config/controllers/5dof_controllers.yaml
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/xsarm_moveit_sensor_manager.launch.xml
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/moveit_rviz.launch
+/home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/config/kinematics.yaml
+
+-------------------------------------------------------------------------------------------------------------------------------
+rosrun rqt_gui rqt_gui robot_description:=/kuka/robot_description
+ - rqt_joint_trajectory_controller plugin installation 
+ - Message Publsher
+
+plugins Dynamic Reconfigure
+
+sudo apt install ros-noetic-pr2-common
+
+rqt_plot /kuka/joint_states/position[1] # plotting joint position
+
+https://answers.gazebosim.org/question/18572/why-do-models-vibrate-when-spawned-into-gazebo/
+https://answers.gazebosim.org//question/13506/preventing-bouncing-of-object/?answer=13515#post-id-13515
+"""
+For my robot arm, removing the fixed joint between the robot and the world fixed the jitters. I have no idea why.
+"""
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE CATKIN WS AND ROS PACKAGES
+
+
+mkdir -p ~/Workspaces/intrarobots_ws/src
+
+cd ~/Workspaces/intrarobots_ws
+catkin_make
+
+cd ~/Workspaces/intrarobots_ws/src
+catkin_create_pkg robotic_arm_descriptions joint_state_publisher joint_state_publisher_gui robot_state_publisher roslaunch rviz xacro
+
+cd ~/Workspaces/intrarobots_ws
+catkin_make
+
+nano ~/.bashrc
+source ~/Workspaces/intrarobots_ws/devel/setup.bash
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------
+
+robotic_arm_descriptions // see main launch file for to do
+
+robotic_arm_gazebo // interbotix_texture.gazebo?? controllers?? 
+
+
+
+
+
+
+
+
+
+
+
+
+
