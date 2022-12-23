@@ -1,0 +1,285 @@
+#!/usr/bin/env python
+import math
+import sys
+import copy
+import rospy
+import random
+import moveit_commander
+import moveit_msgs.msg
+import geometry_msgs.msg
+## Import msgs and srvs ##
+from geometry_msgs.msg import PoseStamped
+from trajectory_msgs.msg import JointTrajectoryPoint
+from moveit_msgs.msg import DisplayTrajectory, Grasp, PlaceLocation
+from moveit_msgs.srv import ApplyPlanningScene
+from math import pi
+from six.moves import input
+from std_msgs.msg import String
+from tf.transformations import quaternion_from_euler
+from moveit_commander.conversions import pose_to_list
+import numpy as np
+import rospy
+from sensor_msgs.msg import LaserScan
+from std_msgs.msg import String
+from std_msgs.msg import Float64
+import socket, pickle
+
+def all_close(goal, actual, tolerance):
+  """
+  Convenience method for testing if a list of values are within a tolerance of their counterparts in another list
+  @param: goal       A list of floats, a Pose or a PoseStamped
+  @param: actual     A list of floats, a Pose or a PoseStamped
+  @param: tolerance  A float
+  @returns: bool
+  """
+  all_equal = True
+  if type(goal) is list:
+    for index in range(len(goal)):
+      if abs(actual[index] - goal[index]) > tolerance:
+        return False
+
+  elif type(goal) is geometry_msgs.msg.PoseStamped:
+    return all_close(goal.pose, actual.pose, tolerance)
+
+  elif type(goal) is geometry_msgs.msg.Pose:
+    return all_close(pose_to_list(goal), pose_to_list(actual), tolerance)
+
+  return True
+
+class Controller(object):
+
+  def __init__(self):
+    # super(MoveGroupPythonIntefaceTutorial, self).__init__()
+    ## First initialize `moveit_commander`_ and a `rospy`_ node:
+    moveit_commander.roscpp_initialize(sys.argv)
+    rospy.init_node('moveit_python_interface')
+    ## Get the name of the robot - this will be used to properly define the end-effector link when adding a box
+    self.robot_model = rospy.get_param("~robot_model")
+    self.robot_name = rospy.get_namespace().strip("/")
+    self.ee_link_offset = rospy.get_param("~ee_link_offset")
+    self.joint_goal = rospy.get_param("~joint_goal")
+    pose_goal_raw = rospy.get_param("~pose_goal")
+    # desired pose goal: pose_goal_raw=[x, y, z, roll, pitch, yaw] w.r.t the 'world' frame (eg pose_goal_raw = [0.2, 0.0, 0.25, 0, 0, 0]  )
+    self.set_pose_goal(pose_goal_raw)
+    print(self.pose_goal)
+
+    #self.ee_gripper_link=rospy.get_param("~ee_gripper_link")
+    #print(rospy.get_param(""))
+
+    ## Instantiate a `RobotCommander`_ object. This object is the outer-level interface to the robot:
+    self.robot = moveit_commander.RobotCommander()
+
+    ## Instantiate a `PlanningSceneInterface`_ object.  This object is an interface to the world surrounding the robot:
+    self.scene = moveit_commander.PlanningSceneInterface()
+
+    ## Instantiate a `MoveGroupCommander`_ object.  This object is an interface
+    ## to one group of joints.  In this case the group is the joints in the Interbotix
+    ## arm so we set ``group_name = interbotix_arm``. If you are using a different robot,
+    ## you should change this value to the name of your robot arm planning group.
+    ## This interface can be used to plan and execute motions on the Interbotix Arm:
+    group_name = "interbotix_arm"
+    group_name2 = "interbotix_gripper"
+    self.group = moveit_commander.MoveGroupCommander(group_name)
+    self.group2 = moveit_commander.MoveGroupCommander(group_name2)
+    self.group.set_max_velocity_scaling_factor(value=0.5)
+    ## We create a `DisplayTrajectory`_ publisher which is used later to publish
+    ## trajectories for RViz to visualize:
+    self.display_trajectory_publisher = rospy.Publisher("move_group/display_planned_path",
+                                                   moveit_msgs.msg.DisplayTrajectory,
+                                                   queue_size=20)
+
+    ## Getting Basic Information
+    # We can get the name of the reference frame for this robot:
+    self.planning_frame = self.group.get_planning_frame()
+    # We can also print the name of the end-effector link for this group:
+    self.eef_link = self.group.get_end_effector_link()
+    # We can get a list of all the groups in the robot:
+    self.group_names = self.robot.get_group_names()
+
+  def set_pose_goal(self,pose_goal_raw):
+      quat = quaternion_from_euler(pose_goal_raw[3], pose_goal_raw[4], pose_goal_raw[5])
+      self.pose_goal = geometry_msgs.msg.Pose()
+      self.pose_goal.position.x = pose_goal_raw[0]
+      self.pose_goal.position.y = pose_goal_raw[1]
+      self.pose_goal.position.z = pose_goal_raw[2]
+      self.pose_goal.orientation.x = quat[0]
+      self.pose_goal.orientation.y = quat[1]
+      self.pose_goal.orientation.z = quat[2]
+      self.pose_goal.orientation.w = quat[3]
+
+
+  def go_to_joint_goal(self):
+    ## Planning to a Joint Goal
+
+    # The go command can be called with joint values, poses, or without any
+    # parameters if you have already set the pose or joint target for the group
+    self.group.go(self.joint_goal, wait=True)
+    # Calling ``stop()`` ensures that there is no residual movement
+    self.group.stop()
+
+    current_joints = self.group.get_current_joint_values()
+    return all_close(self.joint_goal, current_joints, 0.01)
+
+  def go_to_pose_goal(self):
+    ## We can plan a motion for this group to a desired pose for the end-effector:
+
+    self.group.set_pose_target(self.pose_goal)
+    ## Now, we call the planner to compute the plan and execute it.
+    plan = self.group.go(wait=True)
+    # Calling `stop()` ensures that there is no residual movement
+    self.group.stop()
+    # It is always good to clear your targets after planning with poses.
+    # Note: there is no equivalent function for clear_joint_value_targets()
+    self.group.clear_pose_targets()
+
+    current_pose = self.group.get_current_pose().pose
+    return all_close(self.pose_goal, current_pose, 0.01)
+
+
+
+  def go_to_defined_pose(self, pose_goal_raw):
+
+      self.set_pose_goal(pose_goal_raw)
+
+      self.group.set_pose_target(self.pose_goal)
+
+      success = self.go_to_pose_goal()
+
+      if success:
+          msg = ["go_to_defined_pose attempt",pose_goal_raw,'success']
+          send_socket_msg(msg,port=9989)
+      else:
+          msg = ["go_to_defined_pose attempt",pose_goal_raw,'fail']
+          send_socket_msg(msg,port=9989)
+
+      return success
+
+  def move_gripper(self, gripper_position):
+    # gripper: left_finger, right_finger
+    #self.group2.set_joint_value_target([0.018, -0.016]) #almost closed
+    #self.group2.set_joint_value_target([0.034, -0.034]) #almost totally open
+    self.group2.set_joint_value_target(gripper_position)
+    self.group2.go()
+    # plan = self.group2.plan()[1]
+    # self.group2.execute(plan, wait=True)
+
+    msg = ["move_gripper attempt",self.check_gripper_state()]
+    send_socket_msg(msg,port=9989)
+
+  def check_gripper_state(self,send_result=False):
+    cur_gripper_position = self.group2.get_current_joint_values()
+
+    min = 0.016
+    max = 0.033
+    error1 = (cur_gripper_position[0] - min) / (max - min)
+    error2 = (cur_gripper_position[1] - (-min)) / ((-max) - (-min))
+    error = (error1 + error2) / 2.0
+
+    if error < 0.15:
+        result = 'closed'
+    elif error > 0.8:
+        result = 'open'
+    else:
+        result = 'semi_closed'
+
+    if send_result:
+        msg = ['check_gripper_state',result]
+        send_socket_msg(msg,port=9989)
+
+  def control_motor_angles(self, desired_angles):
+    #robot: waist, shoulder, elbow, wrist_angle, wrist_rotate
+    #print(self.group.get_joint_value_target())
+    #print(self.group.get_current_state())
+    #print(self.group.get_current_joint_values())
+    self.group.set_joint_value_target(desired_angles)
+    plan = self.group.plan()[1]
+    self.group.execute(plan, wait=True)
+    #print(self.group.get_current_state())
+
+
+  def plan_cartesian_path(self, x_dir=1, z_dir=1):
+    ## Cartesian Paths
+    ## ^^^^^^^^^^^^^^^
+    ## You can plan a Cartesian path directly by specifying a list of waypoints
+    ## for the end-effector to go through:
+    ##
+    waypoints = []
+
+    wpose = self.group.get_current_pose().pose
+    wpose.position.z += z_dir * 0.1  # First move up (z)
+    waypoints.append(copy.deepcopy(wpose))
+
+    wpose.position.x += x_dir * 0.1  # Second move forward in (x)
+    waypoints.append(copy.deepcopy(wpose))
+
+    wpose.position.z -= z_dir * 0.1  # Third move down (z)
+    waypoints.append(copy.deepcopy(wpose))
+
+    # We want the Cartesian path to be interpolated at a resolution of 1 cm
+    # which is why we will specify 0.01 as the eef_step in Cartesian
+    # translation.  We will disable the jump threshold by setting it to 0.0 disabling:
+    (plan, fraction) = self.group.compute_cartesian_path(
+                                       waypoints,   # waypoints to follow
+                                       0.01,        # eef_step
+                                       0.0)         # jump_threshold
+
+    # Note: We are just planning, not asking move_group to actually move the robot yet:
+    return plan, fraction
+
+  def display_trajectory(self, plan):
+    ## Displaying a Trajectory
+    ## ^^^^^^^^^^^^^^^^^^^^^^^
+    ## You can ask RViz to visualize a plan (aka trajectory) for you. But the
+    ## group.plan() method does this automatically so this is not that useful
+    ## here (it just displays the same trajectory again):
+    ##
+    ## A `DisplayTrajectory`_ msg has two primary fields, trajectory_start and trajectory.
+    ## We populate the trajectory_start with our current robot state to copy over
+    ## any AttachedCollisionObjects and add our plan to the trajectory.
+    display_trajectory = moveit_msgs.msg.DisplayTrajectory()
+    display_trajectory.trajectory_start = self.robot.get_current_state()
+    display_trajectory.trajectory.append(plan)
+    # Publish
+    self.display_trajectory_publisher.publish(display_trajectory);
+
+
+def send_socket_msg(Message,address="localhost",port=9988):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((address, port))
+    data_string = pickle.dumps(Message)
+    s.send(data_string)
+    s.close()
+
+def main():
+
+    controller = Controller()
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("localhost", 9988))
+
+    while True:
+        try:
+            s.listen(1)
+            #s.settimeout(2)
+            conn, addr = s.accept()
+            data = conn.recv(1024)
+            data_arr = pickle.loads(data)
+            print("#########")
+            print(data_arr)
+            print("#########")
+            s.shutdown(1) # By convention, but not actually necessary
+            conn.close()
+
+            if data_arr[0]=="move_to_specified_pose":
+               controller.go_to_defined_pose(data_arr[1])
+            if data_arr[0]=="control_motor_angles":
+               controller.control_motor_angles(data_arr[1])
+            if data_arr[0]=="move_gripper":
+               controller.move_gripper(data_arr[1])
+            if data_arr[0]=="check_gripper_state":
+                controller.check_gripper_state(send_result=True)
+        except socket.error as socketerror:
+              print("Error: ", socketerror)
+
+if __name__ == '__main__':
+    main()

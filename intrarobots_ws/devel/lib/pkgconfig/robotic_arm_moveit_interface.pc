@@ -1,0 +1,8 @@
+prefix=/home/karagk/Workspaces/intrarobots_ws/devel
+
+Name: robotic_arm_moveit_interface
+Description: Description of robotic_arm_moveit_interface
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -1,0 +1,51 @@
+controller_list:
+  - name: "arm_controller"
+    action_ns: follow_joint_trajectory
+    type: FollowJointTrajectory
+    joints:
+      - waist
+      - shoulder
+      - elbow
+      - wrist_angle
+      - wrist_rotate
+  - name: "gripper_controller"
+    action_ns: follow_joint_trajectory
+    type: FollowJointTrajectory
+    joints:
+      - left_finger
+      - right_finger
+  # - name: waist_controller
+  #   action_ns: follow_joint_trajectory
+  #   type: FollowJointTrajectory
+  #   joints:
+  #     - waist
+  # - name: shoulder_controller
+  #   action_ns: follow_joint_trajectory
+  #   type: FollowJointTrajectory
+  #   joints:
+  #     - shoulder
+  # - name: elbow_controller
+  #   action_ns: follow_joint_trajectory
+  #   type: FollowJointTrajectory
+  #   joints:
+  #     - elbow
+  # - name: wrist_angle_controller
+  #   action_ns: follow_joint_trajectory
+  #   type: FollowJointTrajectory
+  #   joints:
+  #     - wrist_angle
+  # - name: wrist_rotate_controller
+  #   action_ns: follow_joint_trajectory
+  #   type: FollowJointTrajectory
+  #   joints:
+  #     - wrist_rotate
+  # - name: left_finger_controller
+  #   action_ns: follow_joint_trajectory
+  #   type: FollowJointTrajectory
+  #   joints:
+  #     - left_finger
+  # - name: right_finger_controller
+  #   action_ns: follow_joint_trajectory
+  #   type: FollowJointTrajectory
+  #   joints:
+  #     - right_finger

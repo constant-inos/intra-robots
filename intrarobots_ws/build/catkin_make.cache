@@ -1,0 +1,2 @@
+master:robotic_arm_descriptions:robotic_arm_gazebo:robotic_arm_moveit:robotic_arm_moveit_interface
+-DCATKIN_DEVEL_PREFIX=/home/karagk/Workspaces/intrarobots_ws/devel -DCMAKE_INSTALL_PREFIX=/home/karagk/Workspaces/intrarobots_ws/install -G Unix Makefiles
