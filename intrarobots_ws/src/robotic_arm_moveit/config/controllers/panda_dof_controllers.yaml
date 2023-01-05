@@ -1,0 +1,34 @@
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 50
+controller_list:
+  - name: "arm_controller"
+    action_ns: follow_joint_trajectory
+    type: FollowJointTrajectory
+    default: True
+    joints:
+      - panda_joint1
+      - panda_joint2
+      - panda_joint3
+      - panda_joint4
+      - panda_joint5
+      - panda_joint6
+      - panda_joint7
+    # Creates the /joint_states topic necessary in ROS
+  - name: "gripper_controller"
+    action_ns: follow_joint_trajectory
+    type: FollowJointTrajectory
+    joints:
+      - panda_finger_joint1
+      - panda_finger_joint2
+hardware_interface:
+  joints:
+      - panda_joint1
+      - panda_joint2
+      - panda_joint3
+      - panda_joint4
+      - panda_joint5
+      - panda_joint6
+      - panda_joint7
+  sim_control_mode: 0  # 0: position, 1: velocity
+# Publish all joint states

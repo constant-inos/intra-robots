@@ -131,6 +131,7 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/karagk/Workspaces/intrarobots_ws/build/gtest/cmake_install.cmake")
+  include("/home/karagk/Workspaces/intrarobots_ws/build/franka_description/cmake_install.cmake")
   include("/home/karagk/Workspaces/intrarobots_ws/build/robotic_arm_moveit_interface/cmake_install.cmake")
   include("/home/karagk/Workspaces/intrarobots_ws/build/robotic_arm_descriptions/cmake_install.cmake")
   include("/home/karagk/Workspaces/intrarobots_ws/build/robotic_arm_gazebo/cmake_install.cmake")

@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="panda">
+  <xacro:arg name="robot_name" default = "panda"/>
+  <xacro:arg name="base_link_frame" default="panda_link0"/>
+  <xacro:arg name="show_ar_tag" default="false"/>
+  <xacro:arg name="show_gripper_bar" default="true"/>
+  <xacro:arg name="show_gripper_fingers" default="true"/>
+  <xacro:arg name="use_world_frame" default="false"/>
+  <xacro:arg name="external_urdf_loc" default=""/>
+  <xacro:arg name="load_gazebo_configs" default="false"/>
+
+  <xacro:include filename="$(find franka_description)/robots/panda/panda.urdf.xacro"  />
+</robot>
