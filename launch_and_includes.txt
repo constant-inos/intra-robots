@@ -4,7 +4,19 @@ LAUNCH: xsarm_moveit_interface.launch - PACKAGE: interbotix_xsarm_moveit_interfa
 	LAUNCH: xsarm_moveit.launch - PACKAGE: interbotix_xsarm_moveit - PATH: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit
 		INCLUDE:
 		LAUNCH: xsarm_gazebo.launch - PACKAGE: interbotix_xsarm_gazebo - PATH: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_gazebo
+			INCLUDE:
+			LAUNCH: empty_world.launch - PACKAGE: gazebo_ros
+			
+			ROSPARAM: $(arg robot_model)_trajectory_controllers.yaml
+			
+			NODE: controller_manager - PACKAGE: controler_manager (trajectory controllers vs position controllers)
+
+			INCLUDE:
+			LAUNCH: xsarm_description.launch - PACKAGE: interbotix_xsarm_descriptions
+
+			NODE: spawn_model - PACKAGE: gazebo_ros
 		
+
 		IF USE ACTUAL: ...
 		IF USE FAKE: ...
 		
@@ -14,11 +26,11 @@ LAUNCH: xsarm_moveit_interface.launch - PACKAGE: interbotix_xsarm_moveit_interfa
 			
 			INCLUDE:
 			LAUNCH: planning_context.launch - PACKAGE: interbotix_xsarm_moveit - PATH: /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit
-				ARGS: ...
-				LOAD ROBOT_MODEL_URDF
-				LOAD ROBOT_MODEL_SRDF
-				LOAD JOINT_LIMITS_YAML
-				LOAD KINEMATICS_YAML (kinematics plugin ?)
+				ARGS: ... 
+				
+				ROSPARAM: $(arg robot_model).srdf.xacro
+				ROSPARAM: $(arg dof)dof_joint_limits.yaml
+				ROSPARAM: kinematics.yaml
 				
 			INCLUDE:
 			LAUNCH: planning_pipeline.launch.xml - PACKAGE: interbotix_xsarm_moveit
@@ -88,4 +100,30 @@ LAUNCH: xsarm_moveit_interface.launch - PACKAGE: interbotix_xsarm_moveit_interfa
 /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/launch/moveit_rviz.launch
 
 /home/karagk/interbotix_ws/src/interbotix_ros_manipulators/interbotix_ros_xsarms/interbotix_xsarm_moveit/config/kinematics.yaml
+
+---------------------------------------------------------------------------------------------------------
+
+$(find interbotix_xsarm_gazebo)/worlds/xsarm_gazebo.world
+$(find interbotix_xsarm_moveit_interface)/config/modes.yaml
+$(find interbotix_xsarm_moveit_interface)/config/$(arg robot_model).yaml
+
+$(find interbotix_xsarm_gazebo)/config/trajectory_controllers/$(arg robot_model)_trajectory_controllers.yaml # for position controllers it is different
+
+$(find interbotix_xsarm_descriptions)/rviz/xsarm_description.rviz # δεν το χω πειραξει καθολου
+$(find interbotix_xsarm_descriptions)/urdf/$(arg robot_model).urdf.xacro
+
+$(find interbotix_xsarm_moveit)/launch/gdb_settings.gdb # για debug, δεν εχω ασχοληθει
+$(find interbotix_xsarm_moveit)/config/srdf/$(arg robot_model).srdf.xacro # requires joint and link names
+$(find interbotix_xsarm_moveit)/config/joint_limits/$(arg dof)dof_joint_limits.yaml # requires joint names
+$(find interbotix_xsarm_moveit)/config/kinematics.yaml # append sth to the file, requires arm name
+
+package://interbotix_xsarm_descriptions/meshes # move meshes dir to descriptions package and change links in urdf?
+$(find interbotix_xsarm_gazebo)/config/interbotix_texture.gazebo
+package://interbotix_xsarm_descriptions/meshes/interbotix_black.png 
+
+$(find interbotix_xsarm_moveit)/config/ompl_planning.yaml
+
+$(find interbotix_xsarm_moveit)/config/controllers/$(arg dof)dof_controllers.yaml # requires controller names and joint names
+
+$(find interbotix_xsarm_moveit)/launch/moveit.rviz
 
