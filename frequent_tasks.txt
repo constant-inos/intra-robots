@@ -29,9 +29,4 @@ terminal 2:
 terminal 3:
 -- python /home/karagk/Desktop/intrarobots/complex_control_scenario_5.py
 -------------------------------------------------------------------------
-
-models
-controllers
-extrernal_urdfs
-world
-moveit_python_interface
+-- roslaunch master xsarm_moveit_interface.launch robot_model:=panda dof:='panda_' base_link_frame:='panda_link0' use_gazebo:=true use_python_interface:=true external_urdf_loc:="/home/karagk/intra-robots/extrernal_urdfs/camera.xacro"
